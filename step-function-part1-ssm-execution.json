@@ -1,0 +1,78 @@
+{
+  "Comment": "Part 1: Execute SSM document to upgrade Windows",
+  "StartAt": "ExecuteSSMDocument",
+  "States": {
+    "ExecuteSSMDocument": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:ssm:startAutomationExecution",
+      "Parameters": {
+        "DocumentName": "AWSEC2-CloneInstanceAndUpgradeWindows",
+        "Parameters": {
+          "InstanceId.$": "States.Array($.InstanceId)",
+          "IamInstanceProfile.$": "States.Array($.IamInstanceProfile)",
+          "SubnetId.$": "States.Array($.SubnetId)",
+          "TargetWindowVersion.$": "States.Array($.TargetWindowVersion)",
+          "AutomationAssumeRole.$": "States.Array($.AutomationAssumeRole)"
+        }
+      },
+      "ResultPath": "$.automationExecution",
+      "Next": "WaitForCompletion"
+    },
+    "WaitForCompletion": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "CheckExecutionStatus"
+    },
+    "CheckExecutionStatus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:ssm:getAutomationExecution",
+      "Parameters": {
+        "AutomationExecutionId.$": "$.automationExecution.AutomationExecutionId"
+      },
+      "ResultPath": "$.executionStatus",
+      "Next": "IsExecutionComplete"
+    },
+    "IsExecutionComplete": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.executionStatus.AutomationExecution.AutomationExecutionStatus",
+          "StringEquals": "Success",
+          "Next": "ExtractAMIId"
+        },
+        {
+          "Variable": "$.executionStatus.AutomationExecution.AutomationExecutionStatus",
+          "StringEquals": "Failed",
+          "Next": "GetFailureDetails"
+        }
+      ],
+      "Default": "WaitForCompletion"
+    },
+    "ExtractAMIId": {
+      "Type": "Pass",
+      "Parameters": {
+        "AMIId.$": "$.executionStatus.AutomationExecution.Outputs['UpgradedFrom2012R2Or2016.ImageId'][0]",
+        "AMIName.$": "$.executionStatus.AutomationExecution.Outputs['UpgradedFrom2012R2Or2016.Name'][0]",
+        "InstanceId.$": "$.InstanceId",
+        "IamInstanceProfile.$": "$.IamInstanceProfile",
+        "SubnetId.$": "$.SubnetId",
+        "InstanceType.$": "$.InstanceType",
+        "TargetWindowVersion.$": "$.TargetWindowVersion"
+      },
+      "End": true
+    },
+    "GetFailureDetails": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:ssm:getAutomationExecution",
+      "Parameters": {
+        "AutomationExecutionId.$": "$.automationExecution.AutomationExecutionId"
+      },
+      "ResultPath": "$.failureDetails",
+      "Next": "ExecutionFailed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "SSM Automation execution failed"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "Comment": "Part 2: Create instance from upgraded AMI",
+  "StartAt": "CreateInstanceFromAMI",
+  "States": {
+    "CreateInstanceFromAMI": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:ec2:runInstances",
+      "Parameters": {
+        "ImageId.$": "$.AMIId",
+        "MinCount": 1,
+        "MaxCount": 1,
+        "InstanceType.$": "$.InstanceType",
+        "SubnetId.$": "$.SubnetId",
+        "IamInstanceProfile": {
+          "Name.$": "$.IamInstanceProfile"
+        },
+        "TagSpecifications": [
+          {
+            "ResourceType": "instance",
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value.$": "States.Format('Upgraded-{}-Instance', $.TargetWindowVersion)"
+              },
+              {
+                "Key": "Source",
+                "Value": "Step-Function-Upgrade-Part2"
+              },
+              {
+                "Key": "OriginalInstance",
+                "Value.$": "$.InstanceId"
+              },
+              {
+                "Key": "UpgradedAMI",
+                "Value.$": "$.AMIId"
+              }
+            ]
+          }
+        ]
+      },
+      "ResultPath": "$.newInstance",
+      "End": true
+    }
+  }
+}

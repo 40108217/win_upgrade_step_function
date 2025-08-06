@@ -1,0 +1,35 @@
+{
+  "Comment": "Chained Step Functions - SSM execution then instance creation",
+  "StartAt": "ExecuteSSMPart",
+  "States": {
+    "ExecuteSSMPart": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync",
+      "Parameters": {
+        "StateMachineArn": "arn:aws:states:REGION:ACCOUNT:stateMachine:SSM-Execution-Part1",
+        "Input.$": "$"
+      },
+      "ResultPath": "$.ssmResult",
+      "Next": "ShowPart1Output"
+    },
+    "ShowPart1Output": {
+      "Type": "Pass",
+      "Comment": "Debug: Show Part 1 output",
+      "Parameters": {
+        "Part1Output.$": "$.ssmResult.Output",
+        "OriginalInput.$": "$"
+      },
+      "Next": "CreateInstancePart"
+    },
+    "CreateInstancePart": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync",
+      "Parameters": {
+        "StateMachineArn": "arn:aws:states:REGION:ACCOUNT:stateMachine:Create-Instance-Part2",
+        "Input.$": "States.StringToJson($.Part1Output)"
+      },
+      "ResultPath": "$.instanceResult",
+      "End": true
+    }
+  }
+}

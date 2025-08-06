@@ -74,6 +74,9 @@ aws stepfunctions start-execution --state-machine-arn arn:aws:states:us-east-1:7
 - Original Windows 2016 instance preserved
 
 ## Troubleshooting
+<img width="497" height="641" alt="part_1_stepfunctions_graph" src="https://github.com/user-attachments/assets/234a18ab-6e82-4ce4-b3c8-930ebc34b04f" />
+
+
 
 - **Access Denied**: Check IAM permissions
 - **Instance Not Ready**: Verify SSM Agent status

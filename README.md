@@ -69,6 +69,7 @@ aws stepfunctions start-execution --state-machine-arn arn:aws:states:us-east-1:7
 <img width="265" height="384" alt="chained_stepfunctions_graph" src="https://github.com/user-attachments/assets/c8429adf-14ee-4398-9a16-ca7e3794d1fd" />
 
 <img width="497" height="641" alt="part_1_stepfunctions_graph" src="https://github.com/user-attachments/assets/234a18ab-6e82-4ce4-b3c8-930ebc34b04f" />
+
 ## Output
 
 - New Windows 2019 instance
